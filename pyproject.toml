@@ -1,8 +1,11 @@
 [tool.poetry]
 name = "d4-dbst"
 version = "0.1.0"
-description = ""
-authors = ["Adriano Cardace cardace6@gmail.com"]
+description = "Implementation of D4-DBST paper"
+authors = [
+    "Adriano Cardace cardace6@gmail.com",
+    "Luca De Luigi lucadeluigi91@gmail.com"
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -13,7 +16,6 @@ wandb = "^0.10.11"
 hydra-core = "^1.0.4"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
 black = "^20.8b1"
 
 [build-system]
