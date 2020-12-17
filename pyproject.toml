@@ -14,9 +14,14 @@ torchvision = "^0.8.1"
 pytorch-lightning = "^1.0.7"
 wandb = "^0.10.11"
 hydra-core = "^1.0.4"
+hesiod = "^0.1.1"
+Pillow = "^8.0.1"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
+isort = "^5.6.4"
+mypy = "^0.790"
+flake8 = "^3.8.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -24,14 +29,20 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 100
-target-version = ['py37']
+target-version = ['py38']
 exclude = '''
 (
-  /(
-      .git
+/(
+    .git
+    | .mypy_cache
     | .venv
     | build
     | dist
-  )
+)
 )
 '''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 9
