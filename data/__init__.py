@@ -1,4 +1,5 @@
-from data.dep import DepthDataset
-from data.sem import CSSemDataset, GTASemDataset, SynthiaSemDataset
+from typing import Optional, Tuple
 
-__all__ = ["DepthDataset", "CSSemDataset", "GTASemDataset", "SynthiaSemDataset"]
+from torch.functional import Tensor
+
+ITEM_T = Tuple[Tensor, Optional[Tensor], Optional[Tensor]]
