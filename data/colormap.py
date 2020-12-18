@@ -1,5 +1,6 @@
-from matplotlib import cm
-from matplotlib.colors import ColorMap, ListerColorMap
+import numpy as np  # type: ignore
+from matplotlib import cm  # type: ignore
+from matplotlib.colors import Colormap, ListedColormap  # type: ignore
 
 cmap12 = [
     (70, 130, 180),  # sky
@@ -14,7 +15,7 @@ cmap12 = [
     (220, 20, 60),  # person
     (119, 11, 32),  # bicycle
     (250, 170, 30),  # traffic light
-    (220, 220, 0),  # unknown
+    (0, 0, 0),  # unknown
 ]
 
 cmap19 = [
@@ -41,11 +42,11 @@ cmap19 = [
 ]
 
 
-def get_cmap(name: str) -> ColorMap:
+def get_cmap(name: str) -> Colormap:
     try:
         cmap = cm.get_cmap(name)
     except ValueError:
         cmaps = {"cmap12": cmap12, "cmap19": cmap19}
-        cmap = ListerColorMap(cmaps[name])
+        cmap = ListedColormap(np.array(cmaps[name], dtype=np.float) / 255)
 
     return cmap
