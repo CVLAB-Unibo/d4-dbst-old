@@ -1,5 +1,3 @@
-from typing import Optional, Tuple
+from data.datamodule import DataModule
 
-from torch.functional import Tensor
-
-ITEM_T = Tuple[Tensor, Optional[Tensor], Optional[Tensor]]
+__all__ = ["DataModule"]
