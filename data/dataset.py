@@ -1,19 +1,21 @@
 from abc import ABC
 from pathlib import Path
-from typing import List, Sequence
+from typing import List, Optional, Sequence, Tuple
 
 import numpy as np  # type: ignore
+import torch  # type: ignore
 from hesiod import hcfg
-from PIL import Image  # type: ignore
+from PIL import Image
+from torch.functional import Tensor
 from torch.utils.data.dataset import Dataset as TorchDataset
 
-from data import ITEM_T
 from data.colormap import get_cmap
 from data.semmap import get_map
 from data.transforms import Compose
 from data.utils import img2depth
 
 SAMPLE_T = Sequence[Path]
+ITEM_T = Tuple[Tensor, Optional[Tensor], Optional[Tensor]]
 
 
 class Dataset(TorchDataset, ABC):
@@ -21,7 +23,7 @@ class Dataset(TorchDataset, ABC):
         TorchDataset.__init__(self)
         ABC.__init__(self)
 
-        root = Path(hcfg(f"{cfgkey}.root", str))
+        root = Path(hcfg("data_root", str))
         input_file = hcfg(f"{cfgkey}.input_file", str)
         self.samples: List[SAMPLE_T] = []
 
@@ -36,21 +38,21 @@ class Dataset(TorchDataset, ABC):
 
         self.sem = hcfg(f"{cfgkey}.sem", bool)
         if self.sem:
-            self.semmap = get_map(hcfg(f"{cfgkey}.semmap", str))
-            self.semcmap = get_cmap(hcfg(f"{cfgkey}.semcmap", str))
+            self.sem_map = get_map(hcfg(f"{cfgkey}.sem_map", str))
+            self.sem_cmap = get_cmap(hcfg(f"{cfgkey}.sem_cmap", str))
 
         self.dep = hcfg(f"{cfgkey}.dep", bool)
         if self.dep:
-            self.depcmap = get_cmap(hcfg(f"{cfgkey}.depcmap", str))
+            dummy = (0.1, 0.1)
+            self.dep_min, self.dep_max = hcfg(f"dep_range", type(dummy))
+            self.dep_cmap = get_cmap(hcfg(f"{cfgkey}.dep_cmap", str))
 
-        self.mean = hcfg(f"{cfgkey}.mean", Sequence[float])
-        self.std = hcfg(f"{cfgkey}.std", Sequence[float])
         self.transform = transform
 
     def encode_sem(self, sem_img: Image.Image) -> np.ndarray:
         sem = np.array(sem_img)
         sem_copy = sem.copy()
-        for k, v in self.semmap.items():
+        for k, v in self.sem_map.items():
             sem_copy[sem == k] = v
         return sem_copy
 
@@ -62,9 +64,30 @@ class Dataset(TorchDataset, ABC):
             sem = self.encode_sem(Image.open(sem_path))
         if self.dep:
             dep = img2depth(Image.open(dep_path))
+            dep = np.clip(dep, self.dep_min, self.dep_max)
 
         sample = (image, sem, dep)
         return self.transform(sample)
 
     def __len__(self) -> int:
         return len(self.samples)
+
+    @staticmethod
+    def collate_fn(batches: List[ITEM_T]) -> ITEM_T:
+        imgs: List[Tensor] = []
+        sems: List[Tensor] = []
+        deps: List[Tensor] = []
+
+        for batch in batches:
+            img, sem, dep = batch
+            imgs.append(img)
+            if sem is not None:
+                sems.append(sem)
+            if dep is not None:
+                deps.append(dep)
+
+        img_stack = torch.stack(imgs, 0)
+        sem_stack = torch.stack(sems, 0) if len(sems) > 0 else None
+        dep_stack = torch.stack(deps, 0) if len(deps) > 0 else None
+
+        return img_stack, sem_stack, dep_stack
