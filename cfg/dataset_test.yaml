@@ -1,0 +1,11 @@
+data_root: "/data/lDeLuigi/datasets"
+train_dataset: "@BASE(dataset)"
+val_source_dataset: "@BASE(dataset)"
+val_target_dataset: "@BASE(dataset)"
+num_workers: 16
+train_batch_size: 4
+val_batch_size: 1
+mean: !!python/tuple [0.485, 0.456, 0.406]
+std: !!python/tuple [0.229, 0.225, 0.224]
+dep_range: !!python/tuple [0.01, 80.0]
+resize_dim: !!python/tuple [512, 1024]
