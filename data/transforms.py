@@ -1,15 +1,15 @@
 import random
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Sequence, Tuple
 
 import numpy as np  # type: ignore
 import torch
 import torchvision.transforms as T  # type: ignore
 import torchvision.transforms.functional as F  # type: ignore
 from PIL import Image  # type: ignore
-
-from data import ITEM_T
+from torch.tensor import Tensor
 
 SAMPLE_T = Tuple[Image.Image, Optional[np.ndarray], Optional[np.ndarray]]
+ITEM_T = Tuple[Tensor, Optional[Tensor], Optional[Tensor]]
 TRANSFORM_T = Callable[[ITEM_T], ITEM_T]
 
 
@@ -48,7 +48,7 @@ class Resize:
         img_size: Tuple[int, int],
         sem_size: Tuple[int, int],
         dep_size: Tuple[int, int],
-        interpolation: int,
+        interpolation: int = Image.BILINEAR,
     ):
         self.img_size = img_size
         self.sem_size = sem_size
@@ -60,9 +60,11 @@ class Resize:
 
         img = F.resize(img, list(self.img_size), self.interpolation)
         if sem is not None:
-            sem = F.resize(sem, list(self.sem_size), interpolation=Image.NEAREST)
+            sem = F.resize(sem.unsqueeze(0), list(self.sem_size), interpolation=Image.NEAREST)
+            sem = sem.squeeze()
         if dep is not None:
-            dep = F.resize(dep, list(self.dep_size), interpolation=self.interpolation)
+            dep = F.resize(dep.unsqueeze(0), list(self.dep_size), interpolation=self.interpolation)
+            dep = dep.squeeze()
 
         return img, sem, dep
 
@@ -128,12 +130,12 @@ class ToTensor:
         if sem is not None:
             sem = torch.as_tensor(sem, dtype=torch.long)
         if dep is not None:
-            dep = torch.as_tensor(sem, dtype=torch.float)
+            dep = torch.as_tensor(dep, dtype=torch.float)
         return (image, sem, dep)
 
 
 class Normalize:
-    def __init__(self, mean: Tuple[float], std: Tuple[float]):
+    def __init__(self, mean: Sequence[float], std: Sequence[float]):
         self.mean = mean
         self.std = std
 
