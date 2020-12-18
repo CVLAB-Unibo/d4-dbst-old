@@ -42,29 +42,45 @@ cs19: Dict[int, int] = {
 gta19: Dict[int, int] = {}
 
 cs12: Dict[int, int] = {
-    0: 2,  # road
-    10: 0,  # sky
-    2: 1,  # building
-    1: 3,  # sidewalk
-    4: 4,  # fence
-    8: 5,  # vegetation
-    5: 6,  # pole
-    13: 7,  # car
-    7: 8,  # traffic sign
-    11: 9,  # person
-    18: 10,  # bicycle
-    3: 12,  # wall
-    6: 11,  # traffic ligh
-    9: 12,  # terrain
-    12: 10,  # rider
-    14: 7,  # truck
-    15: 7,  # bus
-    16: 12,  # train
-    17: 12,  # motorcycle
-    19: 12,  # unknown
+    0: 12,  # unlabelled
+    1: 12,  # ego vehicle
+    2: 12,  # rectification border
+    3: 12,  # out of roi
+    4: 12,  # static
+    5: 12,  # dynamic
+    6: 12,  # ground
+    7: 2,  # road
+    8: 3,  # sidewalk
+    9: 12,  # parking
+    10: 12,  # rail track
+    11: 1,  # building
+    12: 19,  # wall
+    13: 4,  # fence
+    14: 12,  # guard rail
+    15: 12,  # bridge
+    16: 12,  # tunnel
+    17: 6,  # pole
+    18: 12,  # polegroup
+    19: 11,  # traffic light
+    20: 8,  # traffic sign
+    21: 5,  # vegetation
+    22: 12,  # terrain
+    23: 0,  # sky
+    24: 9,  # person
+    25: 10,  # rider
+    26: 7,  # car
+    27: 7,  # truck
+    28: 7,  # bus
+    29: 12,  # caravan
+    30: 12,  # trailer
+    31: 12,  # train
+    32: 12,  # motorcycle
+    33: 10,  # bicycle
+    34: 12,  # unknown
+    -1: 12,  # license plate
 }
 
-synthia12: Dict[int, int] = {
+synthiaseq12: Dict[int, int] = {
     0: 12,  # unknown
     1: 0,  # sky
     2: 1,  # building
@@ -85,5 +101,5 @@ synthia12: Dict[int, int] = {
 
 
 def get_map(name: str) -> Dict[int, int]:
-    maps = {"cs19": cs19, "cs12": cs12, "gta19": gta19, "synthia12": synthia12}
+    maps = {"cs19": cs19, "cs12": cs12, "gta19": gta19, "synthiaseq12": synthiaseq12}
     return maps[name]
