@@ -1,6 +1,6 @@
 from abc import ABC
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Sequence
 
 import numpy as np  # type: ignore
 from hesiod import hcfg
@@ -8,20 +8,21 @@ from PIL import Image  # type: ignore
 from torch.utils.data.dataset import Dataset as TorchDataset
 
 from data import ITEM_T
+from data.colormap import get_cmap
 from data.semmap import get_map
 from data.transforms import Compose
 from data.utils import img2depth
 
-SAMPLE_T = Tuple[Path, Path, Path]
+SAMPLE_T = Sequence[Path]
 
 
 class Dataset(TorchDataset, ABC):
-    def __init__(self, transform: Compose) -> None:
+    def __init__(self, cfgkey: str, transform: Compose) -> None:
         TorchDataset.__init__(self)
         ABC.__init__(self)
 
-        root = Path(hcfg("dataset.root", str))
-        input_file = hcfg("dataset.input_file", str)
+        root = Path(hcfg(f"{cfgkey}.root", str))
+        input_file = hcfg(f"{cfgkey}.input_file", str)
         self.samples: List[SAMPLE_T] = []
 
         with open(input_file, "rt") as f:
@@ -33,13 +34,17 @@ class Dataset(TorchDataset, ABC):
                 dep = root / Path(splits[2].strip())
                 self.samples.append((image, sem, dep))
 
-        self.dep = hcfg("dataset.dep", bool)
-        self.sem = hcfg("dataset.sem", bool)
+        self.sem = hcfg(f"{cfgkey}.sem", bool)
         if self.sem:
-            self.semmap = get_map(hcfg("dataset.semmap", str))
+            self.semmap = get_map(hcfg(f"{cfgkey}.semmap", str))
+            self.semcmap = get_cmap(hcfg(f"{cfgkey}.semcmap", str))
 
-        self.mean = hcfg("dataset.mean", Tuple[float])
-        self.std = hcfg("dataset.std", Tuple[float])
+        self.dep = hcfg(f"{cfgkey}.dep", bool)
+        if self.dep:
+            self.depcmap = get_cmap(hcfg(f"{cfgkey}.depcmap", str))
+
+        self.mean = hcfg(f"{cfgkey}.mean", Sequence[float])
+        self.std = hcfg(f"{cfgkey}.std", Sequence[float])
         self.transform = transform
 
     def encode_sem(self, sem_img: Image.Image) -> np.ndarray:
