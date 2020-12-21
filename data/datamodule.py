@@ -9,14 +9,14 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 
 from data.dataset import Dataset
-from data.transforms import TRANSFORM_T, Compose, Normalize, Resize
+from data.transforms import Compose
 from data.utils import denormalize
 
 ITEM_T = Tuple[Tensor, Optional[Tensor], Optional[Tensor]]
 
 
 class DataModule(LightningDataModule):
-    def __init__(self) -> None:
+    def __init__(self, train_transform: Compose, val_transform: Compose) -> None:
         LightningDataModule.__init__(self)  # type: ignore
         num_workers = hcfg("num_workers", int)
         self.build_dataloader = partial(
@@ -25,29 +25,17 @@ class DataModule(LightningDataModule):
             pin_memory=True,
             collate_fn=Dataset.collate_fn,
         )
+        self.train_transform = train_transform
+        self.val_transform = val_transform
 
     def prepare_data(self, *args: Any, **kwargs: Any) -> None:
         LightningDataModule.prepare_data(self, *args, **kwargs)  # type: ignore
 
     def setup(self, stage: Optional[str] = None) -> None:
         LightningDataModule.setup(self, stage)
-
-        transforms: List[TRANSFORM_T] = []
-
-        dummy = (1, 1)
-        resize_dim = hcfg("resize_dim", type(dummy))
-        transforms.append(Resize(resize_dim, resize_dim, resize_dim))
-
-        dummy = (0.1, 0.1, 0.1)
-        self.mean = hcfg("mean", type(dummy))
-        self.std = hcfg("std", type(dummy))
-        transforms.append(Normalize(self.mean, self.std))
-
-        transform = Compose(transforms)
-
-        self.train_dst = Dataset("train_dataset", transform)
-        self.val_source_dst = Dataset("val_source_dataset", transform)
-        self.val_target_dst = Dataset("val_target_dataset", transform)
+        self.train_dst = Dataset("train_dataset", self.train_transform)
+        self.val_source_dst = Dataset("val_source_dataset", self.val_transform)
+        self.val_target_dst = Dataset("val_target_dataset", self.val_transform)
 
     def train_dataloader(self, *args: Any, **kwargs: Any) -> DataLoader:
         bs = hcfg("train_batch_size", int)
@@ -105,7 +93,10 @@ class DataModule(LightningDataModule):
         img, sem, dep = [element[0] if element is not None else None for element in item]
 
         denorm_img = np.transpose(np.array(img), axes=(1, 2, 0))
-        denorm_img = denormalize(denorm_img, self.mean, self.std)
+
+        mean = hcfg("mean", type((0.1, 0.1, 0.1)))
+        std = hcfg("std", type((0.1, 0.1, 0.1)))
+        denorm_img = denormalize(denorm_img, mean, std)
 
         colored_sem = dataset.sem_cmap(np.array(sem)) if sem is not None else None
 
