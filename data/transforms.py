@@ -58,15 +58,18 @@ class Resize:
     def __call__(self, item: ITEM_T) -> ITEM_T:
         img, sem, dep = item
 
-        img = F.resize(img, list(self.img_size), self.interpolation)
+        resized_img = F.resize(img, list(self.img_size), self.interpolation)
+        resized_sem, resized_dep = None, None
         if sem is not None:
-            sem = F.resize(sem.unsqueeze(0), list(self.sem_size), interpolation=Image.NEAREST)
-            sem = sem.squeeze()
+            sem.unsqueeze_(0)
+            resized_sem = F.resize(sem, list(self.sem_size), interpolation=Image.NEAREST)
+            resized_sem.squeeze_()
         if dep is not None:
-            dep = F.resize(dep.unsqueeze(0), list(self.dep_size), interpolation=self.interpolation)
-            dep = dep.squeeze()
+            dep.unsqueeze_(0)
+            resized_dep = F.resize(dep, list(self.dep_size), interpolation=self.interpolation)
+            resized_dep.squeeze_()
 
-        return img, sem, dep
+        return resized_img, resized_sem, resized_dep
 
 
 class RandomCrop:

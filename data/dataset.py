@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
 import numpy as np  # type: ignore
-import torch  # type: ignore
+import torch
 from hesiod import hcfg
-from PIL import Image
+from PIL import Image  # type: ignore
 from torch.functional import Tensor
 from torch.utils.data.dataset import Dataset as TorchDataset
 
@@ -43,8 +43,7 @@ class Dataset(TorchDataset, ABC):
 
         self.dep = hcfg(f"{cfgkey}.dep", bool)
         if self.dep:
-            dummy = (0.1, 0.1)
-            self.dep_min, self.dep_max = hcfg(f"dep_range", type(dummy))
+            self.dep_min, self.dep_max = hcfg("dep_range", type((0.1, 0.1)))
             self.dep_cmap = get_cmap(hcfg(f"{cfgkey}.dep_cmap", str))
 
         self.transform = transform
